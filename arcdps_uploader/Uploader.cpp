@@ -64,7 +64,7 @@ Uploader::Uploader(fs::path data_path)
 	storage = std::make_unique<Storage>(initStorage(db_path.string()));
 	storage->sync_schema(true);
 	storage->open_forever();
-	
+
 	//Webhooks
 	webhooks = storage->get_all<Webhook>();
 	for (auto& wh : webhooks)
@@ -87,8 +87,12 @@ Uploader::Uploader(fs::path data_path)
 		std::string mydocs = std::string(utf_path);
 		fs::path mydocs_path = fs::path(mydocs);
 		LOG_F(INFO, "Documents Path: %s", mydocs_path.string().c_str());
-		log_path = mydocs_path / "Guild Wars 2\\addons\\arcdps\\arcdps.cbtlogs\\";
-		LOG_F(INFO, "Logs Path: %s", log_path.string().c_str());
+		fs::path default_log_path = mydocs_path / "Guild Wars 2\\addons\\arcdps\\";
+		LOG_F(INFO, "Default Logs Path: %s", default_log_path.string().c_str());
+		const char* ini_log_path;
+		ini_log_path = ini.GetValue("config", "log_path", default_log_path.string().c_str());
+		log_path = fs::path(std::string(ini_log_path)) / "arcdps.cbtlogs\\";
+		LOG_F(INFO, "Using Log Path: %s", ini_log_path);
 		if (!std::filesystem::exists(log_path))
 		{
 			{
@@ -454,12 +458,12 @@ uintptr_t Uploader::imgui_tick()
 						memcpy(wh.filter_buf, wh.filter.c_str(), wh.filter.size());
 					}
 				}
-				
+
 				ImGui::TreePop();
 			}
 		}
 
-		if (in_combat) 
+		if (in_combat)
 		{
 			ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "In Combat - Uploads Disabled");
 		}
@@ -564,7 +568,7 @@ void Uploader::create_log_table(Log& l) {
 			if (colors.count(p.elite_spec_name)) {
 				ImGui::TextColored(colors.at(p.elite_spec_name), "%s", p.elite_spec_name == "Unknown" ? p.profession_name_short.c_str() : p.elite_spec_name_short.c_str());
 			} else {
-				ImGui::Text("%s", p.elite_spec_name == "Unknown" ? p.profession_name_short.c_str() : p.elite_spec_name_short.c_str()); 
+				ImGui::Text("%s", p.elite_spec_name == "Unknown" ? p.profession_name_short.c_str() : p.elite_spec_name_short.c_str());
 			}
 			ImGui::NextColumn();
 			ImGui::Text("%s", p.name.c_str()); ImGui::NextColumn();
@@ -838,7 +842,7 @@ void Uploader::upload_thread_loop() {
 			status.log_id = -1;
 			if (response.status_code == 200) {
 				json parsed = json::parse(response.text);
-				
+
 				log->uploaded = true;
 				log->report_id = parsed["id"].get<std::string>();
 				log->permalink = parsed["permalink"].get<std::string>();

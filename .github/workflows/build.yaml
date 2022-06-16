@@ -26,6 +26,14 @@ jobs:
           path: Release/d3d9_uploader.dll
       - name: Release
         uses: softprops/action-gh-release@v1
+        id: create_release
         with:
-          tag_name: ${{ github.ref }}-Release
-          files: Release/d3d9_uploader.dll
+          tag_name: ${{ github.ref }}-Tag
+          release_name: ${{ github.ref }}-Release
+      - name: upload release artifact
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: Release/d3d9_uploader.dll
+          asset_name: d3d9_uploader.dll
+          asset_content_type: application/octet-stream
